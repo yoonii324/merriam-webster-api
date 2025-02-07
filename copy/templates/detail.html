@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sparta Vocabulary Notebook</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS, then Fontawesome -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/e7c8fefeaa.js" crossorigin="anonymous"></script>
+    <style>
+        .wrap {
+            background-color: RGBA(232, 52, 78, 0.2);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        .banner {
+            width: 100%;
+            height: 200px;
+
+            background-color: white;
+            background-image: url('{{ url_for("static", filename="logo_red.png") }}');
+
+            background-position: center;
+            background-size: contain;
+            background-repeat: no-repeat;
+
+            cursor: pointer;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: white;
+
+            border: solid 1px gray;
+            border-radius: 10px;
+        }
+
+        span.example {
+            color: gray;
+            font-size: 14px;
+        }
+
+        .btn-sparta {
+            color: #fff;
+            background-color: #e8344e;
+            border-color: #e8344e;
+        }
+
+        .btn-outline-sparta {
+            color: #e8344e;
+            background-color: transparent;
+            background-image: none;
+            border-color: #e8344e;
+        }
+    </style>
+    <script>
+        let word = '{{ word }}'
+        $(document).ready(function () {
+            get_definitions()
+        })
+
+        function get_definitions() {
+            $.ajax({
+                type: "GET",
+                url: `https://www.dictionaryapi.com/api/v3/references/spanish/json/${word}?key=84c2e134-b89b-44b9-bdb5-597521f39ecd`,
+                data: {},
+                error: function (status, error) {
+                    alert("에러 발생!");
+                },
+                success: function (response) {
+                    console.log(response)
+                    for (let i = 0; i < response.length; i++) {
+                        let resp = response[i]
+                        $("#word").text(response[0]["meta"]["id"])
+                        $("#pronunciation").text(`/${response[0]["hwi"]["hw"]}/`)
+
+                        //원래는 하나의 div로 묶여있었던 것: type, definition, example. example은 내 api에 없으니까 일단 빼고, type은 따로 떼서 definitions에 붙여주기.
+                        let type = response[i]["fl"]
+                        $("#definitions").append(`<strong><em>${type}</em></strong></br>`)
+
+                        let definitions = response[i]["shortdef"]
+                        for (let j = 0; j < definitions.length; j++) {
+                            let definition = definitions[j]
+                            let html_temp = `<h8>${definition};&nbsp<h8>`
+                            $("#definitions").append(html_temp)
+
+                            // let example = "I love reaching out into that absolute silence, when you can hear the owl or the wind."
+                            // $("#definitions").append(`<span class="example">${example}</span><br/><br/>`)
+                        }
+
+                        // 참고로 </br>은 한 줄 띄우는 html 문법임.
+                        $("#definitions").append(`</br></br>`)
+                    }
+                }
+            })
+        }
+    </script>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="banner" onclick="window.location.href = '/'">
+        </div>
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-end">
+                <div>
+                    <h1 id="word" style="display: inline;">owl</h1>
+                    <h5 id="pronunciation" style="display: inline;">/oul/</h5>
+                </div>
+                <button id="btn-save" class="btn btn-outline-sparta btn-lg">
+                    <i class="fa-regular fa-floppy-disk"></i>
+                </button>
+                <button id="btn-delete" class="btn btn-sparta btn-lg">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+            <hr>
+            <div id="definitions" style="padding:10px">
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
