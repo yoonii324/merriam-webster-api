@@ -65,6 +65,148 @@
             padding-left: 10px;
           }
     </style>
+    <script>
+        let word = '{{ word }}'
+        $(document).ready(function () {
+            //get_definitions()
+            get_examples()
+        })
+
+        function get_definitions() {
+            $.ajax({
+                type: "GET",
+                url: `https://www.dictionaryapi.com/api/v3/references/spanish/json/${word}?key=84c2e134-b89b-44b9-bdb5-597521f39ecd`,
+                data: {},
+                error: function (status, error) {
+                    alert("에러 발생!");
+                },
+                success: function (response) {
+                    console.log(response)
+                    for (let i = 0; i < response.length; i++) {
+                        let resp = response[i]
+
+                        let length = word.length
+                        let wordname = response[0]["meta"]["id"].substring(0, length) //substring 힘수 구글링해봤음 ㅋ
+                        console.log(wordname)
+
+                        if (resp["meta"]["id"] == '{{ word }}') {
+                            $("#word").text(word)
+                            $("#pronunciation").text(`/${response[0]["hwi"]["hw"]}/`)
+
+                            let type = resp["fl"]
+                            if (type == response[0].fl ) {
+                                $("#definitions").append(`<strong><em>${type}</em></strong></br>`)
+                            } else {
+                                $("#definitions").append(`<br><strong><em>${type}</em></strong></br>`)
+                            }
+
+                            let definitions = resp["shortdef"]
+                            for (let j = 0; j < definitions.length; j++) {
+                                let definition = definitions[j]
+                                let html_temp = `<h8>${definition};&nbsp<h8>`
+                                $("#definitions").append(html_temp)
+                        }
+                 
+                        $("#definitions").append(`</br></br>`)
+
+                        // example은 지금은 무시. json이 ㅈ같이 돼있음 ㅋ
+                        }
+                    }
+                }
+            })
+        }
+
+        function save_word() {
+            $.ajax({
+                type: "POST",
+                url: `/api/save_word`,
+                data: {
+                    word_give: "{{ word }}",
+                    definition_give: '{{ results[0].shortdef[0] }}'
+                },
+                success: function (response) {
+                   alert(response["msg"])
+                   window.location.href = "/detail/{{ word }}?status_give=old" //이 url을 다시 띄우면 @app.route('/detail/<keyword>')의 def detail(keyword) 함수를 거쳐서 status_receive 값으로 old를 전달받고 이에 띠리 식제버튼이 포함된 html을 띄워주게 되는것임. 오오오 즉 어떤 버튼을 누르면 이 url이 이렇게 뜨게끔 내가 여기서 이 명령어로 시키는거네. 역시. 하.. 버튼을 누르면 url이 자동으로 바뀌는 이유가 여기에 있었어..
+                }
+            });
+        }
+
+        function delete_word() {
+            $.ajax({
+                type: "POST",
+                url: `/api/delete_word`,
+                data: {
+                    word_give: "{{ word }}"
+                },
+                success: function (response) {
+                    alert(response["msg"])
+                    window.location.href = ("/")
+                }
+            });
+        }
+
+        function get_examples() {
+            $("#example-list").empty()
+            $.ajax({
+                type: "GET",
+                url: `/api/get_exs?word_give=${word}`,
+                data: {},
+                success: function (response) {
+                    console.log(response)
+
+                    let examples = response["examples"]  //이 부분을 이때까지 놓쳐서 씨바 ㅠㅠㅠㅠㅠ 화면이 안나왔던거임..
+                    for (let i = 0; i < examples.length; i++) {
+                        let ex = examples[i]["example"]
+
+                        let html_temp = `<li id="ex-${i}">${ex}&nbsp;&nbsp;&nbsp;<a
+                                            href="javascript:delete_ex(${i})">delete</a></li>`
+                        $("#example-list").append(html_temp)
+                    }
+                }
+            });
+        }
+        
+        function add_ex() {
+            let new_ex = $('#new-example').val();
+            console.log(new_ex)
+
+            if (new_ex.includes(word) == false) {
+                alert("단어가 포함된 예문을 작성해주세요")
+                return
+            } 
+
+            $.ajax({
+                type: "POST",
+                url: `/api/save_ex`,
+                data: {
+                    word_give: word,
+                    ex_give: new_ex
+                },
+                success: function (response) {
+                    console.log(response)
+                    alert(response["msg"])
+                    $('#new-example').val(""); //이거 넘 잘했 ㅠㅠ
+                    get_examples()
+                }
+            });
+        }
+        
+        function delete_ex(i) {
+            console.log("deleting", i)
+            $.ajax({
+                type: "POST",
+                url: `/api/delete_ex`,
+                data: {
+                    word_give: word,
+                    number_give: i
+                },
+                success: function (response) {
+                    alert(response["msg"])
+                    get_examples()
+                }
+            });
+        }
+    </script>
 </head>
 
 <body>
